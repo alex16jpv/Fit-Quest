@@ -1,0 +1,1499 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FitQuest</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0e0e10;
+  --surface: #17171a;
+  --surface2: #1f1f24;
+  --border: rgba(255,255,255,0.07);
+  --border2: rgba(255,255,255,0.13);
+  --text: #e8e8ec;
+  --muted: #6b6b78;
+  --accent: #c8f043;
+  --accent2: #7c3aed;
+  --warn: #f59e0b;
+  --danger: #ef4444;
+  --green: #22c55e;
+  --info: #38bdf8;
+  --radius: 14px;
+  --radius-sm: 8px;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { font-size: 16px; }
+body {
+  font-family: 'Syne', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100dvh;
+  overflow-x: hidden;
+}
+.mono { font-family: 'DM Mono', monospace; }
+
+/* ── LAYOUT ── */
+#app { display: flex; flex-direction: column; min-height: 100dvh; }
+
+/* TOP BAR */
+#topbar {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 12px 16px; border-bottom: 1px solid var(--border);
+  background: var(--surface); gap: 10px; flex-shrink: 0;
+  position: sticky; top: 0; z-index: 50;
+}
+#topbar .logo { font-size: 18px; font-weight: 800; letter-spacing: -0.5px; color: var(--accent); }
+.stats-row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.stat-chip {
+  display: flex; align-items: center; gap: 5px;
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 99px; padding: 4px 10px; font-size: 12px; font-weight: 600;
+  white-space: nowrap;
+}
+.stat-chip .val { color: var(--accent); font-family: 'DM Mono', monospace; }
+.stat-chip .lbl { color: var(--muted); font-size: 11px; }
+#btn-settings {
+  background: none; border: 1px solid var(--border2); border-radius: var(--radius-sm);
+  color: var(--muted); padding: 6px 10px; font-size: 12px; font-family: 'Syne', sans-serif;
+  cursor: not-allowed; opacity: 0.5; display: flex; align-items: center; gap: 5px;
+}
+.streak-badge {
+  display: flex; align-items: center; gap: 4px;
+  background: linear-gradient(135deg, #f59e0b22, #ef444422);
+  border: 1px solid #f59e0b44; border-radius: 99px;
+  padding: 4px 10px; font-size: 12px; font-weight: 700; color: var(--warn);
+}
+
+/* MAIN CONTENT */
+#content { flex: 1; overflow-y: auto; }
+
+/* TABS */
+#tabs {
+  display: flex; background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  position: sticky; top: 57px; z-index: 40;
+}
+.tab-btn {
+  flex: 1; padding: 10px 4px; font-size: 12px; font-weight: 600;
+  font-family: 'Syne', sans-serif;
+  background: none; border: none; color: var(--muted);
+  cursor: pointer; transition: all 0.15s; border-bottom: 2px solid transparent;
+  text-transform: uppercase; letter-spacing: 0.05em;
+}
+.tab-btn.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+/* PANELS */
+.panel { display: none; padding: 16px; }
+.panel.active { display: block; }
+
+/* ── EXERCISE PANEL ── */
+.level-banner {
+  background: var(--surface); border: 1px solid var(--border2);
+  border-radius: var(--radius); padding: 14px 16px; margin-bottom: 14px;
+  display: flex; align-items: center; gap: 12px;
+}
+.level-icon { font-size: 24px; }
+.level-info { flex: 1; }
+.level-name { font-size: 15px; font-weight: 700; }
+.level-sub { font-size: 11px; color: var(--muted); margin-top: 2px; }
+.level-badge {
+  font-size: 11px; font-weight: 700; padding: 3px 10px;
+  border-radius: 99px; background: var(--accent); color: #0e0e10;
+}
+
+/* CYCLE CARD */
+.cycle-card {
+  background: var(--surface); border: 1px solid var(--border2);
+  border-radius: var(--radius); padding: 16px; margin-bottom: 14px;
+}
+.cycle-title { font-size: 13px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 0.07em; color: var(--muted); margin-bottom: 14px; }
+
+/* PLANK TIMER */
+.plank-section { margin-bottom: 16px; }
+.exercise-label { font-size: 13px; font-weight: 600; color: var(--muted);
+  margin-bottom: 8px; display: flex; align-items: center; gap: 6px; }
+.exercise-label span { color: var(--text); }
+.plank-display {
+  background: var(--bg); border-radius: var(--radius-sm);
+  padding: 16px; text-align: center; border: 1px solid var(--border);
+  margin-bottom: 10px; position: relative; overflow: hidden;
+}
+.plank-time {
+  font-family: 'DM Mono', monospace; font-size: 42px; font-weight: 500;
+  color: var(--accent); line-height: 1; letter-spacing: -1px;
+}
+.plank-progress {
+  height: 3px; background: var(--border); border-radius: 99px;
+  margin-top: 10px; overflow: hidden;
+}
+.plank-progress-bar {
+  height: 100%; background: var(--accent); border-radius: 99px;
+  transition: width 0.5s linear; width: 0%;
+}
+.plank-target { font-size: 11px; color: var(--muted); margin-top: 6px; font-family: 'DM Mono', monospace; }
+
+.btn-row { display: flex; gap: 8px; }
+.btn {
+  font-family: 'Syne', sans-serif; font-weight: 700; font-size: 13px;
+  border: none; border-radius: var(--radius-sm); padding: 10px 16px;
+  cursor: pointer; transition: all 0.12s; text-transform: uppercase;
+  letter-spacing: 0.05em; flex: 1;
+}
+.btn:active { transform: scale(0.97); }
+.btn-primary { background: var(--accent); color: #0e0e10; }
+.btn-primary:hover { background: #d4f554; }
+.btn-primary:disabled { background: var(--surface2); color: var(--muted); cursor: not-allowed; transform: none; }
+.btn-secondary { background: var(--surface2); color: var(--text); border: 1px solid var(--border2); }
+.btn-secondary:hover { background: var(--border2); }
+.btn-danger { background: var(--danger); color: white; }
+
+/* PUSHUPS */
+.pushup-section { }
+.counter-display {
+  display: flex; align-items: center; justify-content: center; gap: 16px;
+  background: var(--bg); border-radius: var(--radius-sm);
+  padding: 14px; border: 1px solid var(--border); margin-bottom: 10px;
+}
+.counter-num { font-family: 'DM Mono', monospace; font-size: 48px; font-weight: 500;
+  color: var(--text); min-width: 70px; text-align: center; }
+.counter-num span { color: var(--muted); font-size: 24px; }
+.btn-counter {
+  width: 42px; height: 42px; border-radius: 50%; font-size: 20px; font-weight: 700;
+  border: none; cursor: pointer; display: flex; align-items: center; justify-content: center;
+  transition: all 0.1s;
+}
+.btn-counter:active { transform: scale(0.9); }
+.btn-counter.plus { background: var(--accent); color: #0e0e10; }
+.btn-counter.minus { background: var(--surface2); color: var(--text); border: 1px solid var(--border2); }
+
+/* COMPLETE CYCLE BTN */
+.complete-cycle {
+  background: linear-gradient(135deg, var(--accent), #a3e635);
+  color: #0e0e10; border: none; border-radius: var(--radius);
+  padding: 16px; width: 100%; font-family: 'Syne', sans-serif;
+  font-size: 15px; font-weight: 800; cursor: pointer;
+  text-transform: uppercase; letter-spacing: 0.06em;
+  transition: all 0.15s; margin-top: 4px;
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+}
+.complete-cycle:hover { opacity: 0.92; transform: translateY(-1px); }
+.complete-cycle:active { transform: scale(0.98); }
+.complete-cycle:disabled { background: var(--surface2); color: var(--muted);
+  cursor: not-allowed; transform: none; opacity: 1; }
+.token-reward { font-size: 18px; }
+
+/* OTHER ACTIVITIES */
+.activities-list { display: flex; flex-direction: column; gap: 8px; margin-top: 14px; }
+.activity-card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius-sm); padding: 12px 14px;
+  display: flex; align-items: center; gap: 12px;
+}
+.act-icon { font-size: 20px; width: 32px; text-align: center; }
+.act-info { flex: 1; }
+.act-name { font-size: 14px; font-weight: 600; }
+.act-req { font-size: 11px; color: var(--muted); margin-top: 2px; font-family: 'DM Mono', monospace; }
+.act-token { font-size: 12px; font-weight: 700; color: var(--accent); white-space: nowrap; }
+.btn-log {
+  background: var(--surface2); border: 1px solid var(--border2);
+  border-radius: var(--radius-sm); padding: 6px 12px; font-size: 12px;
+  font-family: 'Syne', sans-serif; font-weight: 600; cursor: pointer;
+  color: var(--text); transition: all 0.12s;
+}
+.btn-log:hover { background: var(--border2); }
+
+/* BONUS SECTION */
+.bonus-card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius-sm); padding: 12px 14px;
+  display: flex; align-items: center; gap: 12px; margin-bottom: 8px;
+}
+.steps-input-row { display: flex; gap: 8px; align-items: center; }
+.steps-input {
+  background: var(--bg); border: 1px solid var(--border2); border-radius: var(--radius-sm);
+  color: var(--text); font-family: 'DM Mono', monospace; font-size: 14px;
+  padding: 8px 12px; width: 120px; outline: none;
+}
+.steps-input:focus { border-color: var(--accent); }
+
+/* ── REDEEM PANEL ── */
+.timer-card {
+  background: var(--surface); border: 1px solid var(--border2);
+  border-radius: var(--radius); padding: 20px; margin-bottom: 14px;
+  text-align: center; position: relative; overflow: hidden;
+}
+.timer-card::before {
+  content: ''; position: absolute; inset: 0;
+  background: radial-gradient(ellipse at 50% 120%, rgba(200,240,67,0.06) 0%, transparent 70%);
+  pointer-events: none;
+}
+.timer-label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.1em;
+  color: var(--muted); margin-bottom: 8px; }
+.timer-display {
+  font-family: 'DM Mono', monospace; font-size: 52px; font-weight: 400;
+  color: var(--accent); line-height: 1; letter-spacing: -2px;
+}
+.timer-display.running { animation: pulse-text 2s ease-in-out infinite; }
+.timer-display.paused { color: var(--warn); }
+.timer-display.expired { color: var(--danger); }
+@keyframes pulse-text {
+  0%, 100% { opacity: 1; } 50% { opacity: 0.7; }
+}
+.timer-activity { font-size: 13px; color: var(--muted); margin-top: 6px; }
+.timer-controls { display: flex; gap: 8px; margin-top: 14px; }
+.tokens-balance {
+  background: var(--surface); border: 1px solid var(--border2);
+  border-radius: var(--radius); padding: 14px 16px; margin-bottom: 14px;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.tokens-val { font-family: 'DM Mono', monospace; font-size: 28px; font-weight: 400;
+  color: var(--accent); }
+.tokens-lbl { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; }
+
+/* REWARD ACTIVITIES */
+.rewards-grid { display: flex; flex-direction: column; gap: 8px; }
+.reward-card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius-sm); padding: 14px;
+  display: flex; align-items: center; gap: 12px; cursor: pointer;
+  transition: all 0.15s;
+}
+.reward-card:hover { border-color: var(--border2); background: var(--surface2); }
+.reward-card.disabled { opacity: 0.4; cursor: not-allowed; }
+.reward-icon { font-size: 22px; width: 36px; text-align: center; }
+.reward-info { flex: 1; }
+.reward-name { font-size: 14px; font-weight: 700; }
+.reward-time { font-size: 12px; color: var(--muted); font-family: 'DM Mono', monospace; margin-top: 2px; }
+.reward-cost {
+  font-size: 12px; font-weight: 700; background: var(--accent); color: #0e0e10;
+  padding: 3px 8px; border-radius: 99px;
+}
+
+/* ── HISTORY PANEL ── */
+.calendar-grid {
+  display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; margin-bottom: 16px;
+}
+.cal-day {
+  aspect-ratio: 1; border-radius: 6px; background: var(--surface);
+  border: 1px solid var(--border); display: flex; align-items: center;
+  justify-content: center; font-size: 10px; font-family: 'DM Mono', monospace;
+  flex-direction: column; gap: 1px; position: relative;
+}
+.cal-day.has-data { background: rgba(200,240,67,0.12); border-color: rgba(200,240,67,0.3); }
+.cal-day.today { border-color: var(--accent); border-width: 1.5px; }
+.cal-day .cal-num { font-size: 9px; color: var(--muted); }
+.cal-day .cal-cycles { font-size: 11px; font-weight: 700; color: var(--accent); }
+.cal-day.empty { background: transparent; border-color: transparent; }
+.history-entries { display: flex; flex-direction: column; gap: 6px; }
+.history-entry {
+  background: var(--surface); border-radius: var(--radius-sm);
+  padding: 10px 12px; border: 1px solid var(--border);
+  display: flex; align-items: center; gap: 10px;
+}
+.entry-icon { font-size: 16px; }
+.entry-info { flex: 1; }
+.entry-name { font-size: 13px; font-weight: 600; }
+.entry-meta { font-size: 11px; color: var(--muted); font-family: 'DM Mono', monospace; margin-top: 2px; }
+.entry-tokens { font-size: 12px; font-weight: 700; color: var(--accent); }
+
+.section-title {
+  font-size: 11px; text-transform: uppercase; letter-spacing: 0.1em;
+  color: var(--muted); font-weight: 600; margin-bottom: 10px; margin-top: 16px;
+}
+.section-title:first-child { margin-top: 0; }
+
+/* ── SETTINGS MODAL ── */
+.modal-overlay {
+  position: fixed; inset: 0; background: rgba(0,0,0,0.8);
+  z-index: 100; display: none; align-items: center; justify-content: center;
+  padding: 16px;
+}
+.modal-overlay.open { display: flex; }
+.modal {
+  background: var(--surface); border: 1px solid var(--border2);
+  border-radius: var(--radius); padding: 20px; width: 100%; max-width: 380px;
+  max-height: 90dvh; overflow-y: auto;
+}
+.modal-title { font-size: 17px; font-weight: 800; margin-bottom: 16px; }
+.modal-close {
+  float: right; background: none; border: none; color: var(--muted);
+  font-size: 20px; cursor: pointer; line-height: 1; margin-top: -2px;
+}
+.form-group { margin-bottom: 14px; }
+.form-label { font-size: 12px; color: var(--muted); font-weight: 600;
+  text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 6px; display: block; }
+.form-input {
+  width: 100%; background: var(--bg); border: 1px solid var(--border2);
+  border-radius: var(--radius-sm); color: var(--text); font-family: 'DM Mono', monospace;
+  font-size: 14px; padding: 10px 12px; outline: none;
+}
+.form-input:focus { border-color: var(--accent); }
+.storage-toggle { display: flex; gap: 8px; }
+.storage-opt {
+  flex: 1; padding: 10px; border: 1px solid var(--border2);
+  border-radius: var(--radius-sm); text-align: center; cursor: pointer;
+  font-size: 13px; font-weight: 600; transition: all 0.12s;
+}
+.storage-opt.active { border-color: var(--accent); background: rgba(200,240,67,0.1); color: var(--accent); }
+
+/* ── TOAST ── */
+#toast {
+  position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%) translateY(100px);
+  background: var(--surface2); border: 1px solid var(--border2);
+  border-radius: var(--radius-sm); padding: 10px 18px;
+  font-size: 13px; font-weight: 600; z-index: 200;
+  transition: transform 0.3s cubic-bezier(0.34,1.56,0.64,1);
+  pointer-events: none; white-space: nowrap;
+}
+#toast.show { transform: translateX(-50%) translateY(0); }
+
+/* ── MINI MODE (very small window) ── */
+@media (max-width: 280px) {
+  #tabs { display: none; }
+  .panel { display: none !important; }
+  #mini-mode { display: flex !important; }
+}
+#mini-mode {
+  display: none; flex-direction: column; align-items: center;
+  justify-content: center; padding: 16px; gap: 10px; min-height: 100dvh;
+}
+.mini-timer {
+  font-family: 'DM Mono', monospace; font-size: 36px;
+  font-weight: 500; color: var(--accent); text-align: center;
+}
+.mini-tokens { font-size: 13px; color: var(--muted); text-align: center; }
+.mini-tokens span { color: var(--accent); font-weight: 700; }
+
+/* ── DESKTOP ── */
+@media (min-width: 768px) {
+  #tabs { display: none; }
+  #desktop-layout { display: grid !important; grid-template-columns: 1fr 1fr; gap: 0; min-height: calc(100dvh - 57px); }
+  .panel { display: block; }
+  #panel-exercise { border-right: 1px solid var(--border); padding: 20px; overflow-y: auto; }
+  #panel-redeem { padding: 20px; overflow-y: auto; }
+  #panel-history { display: none; }
+  #topbar .desktop-history { display: flex !important; }
+}
+#desktop-layout { display: block; }
+.desktop-history { display: none; }
+
+/* SCROLLBAR */
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 99px; }
+
+/* ANIMATIONS */
+@keyframes fade-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+.animate-in { animation: fade-in 0.2s ease both; }
+
+.empty-state { text-align: center; color: var(--muted); padding: 32px 16px; font-size: 13px; }
+.divider { height: 1px; background: var(--border); margin: 14px 0; }
+.add-custom-btn {
+  width: 100%; background: none; border: 1px dashed var(--border2);
+  border-radius: var(--radius-sm); padding: 10px; font-family: 'Syne', sans-serif;
+  font-size: 13px; color: var(--muted); cursor: pointer; transition: all 0.12s;
+  margin-top: 8px;
+}
+.add-custom-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+.progress-ring { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
+.progress-ring-text { flex: 1; }
+.streak-count { font-size: 28px; font-weight: 800; font-family: 'DM Mono', monospace; }
+.streak-label { font-size: 11px; color: var(--muted); }
+</style>
+</head>
+<body>
+<div id="app">
+
+  <!-- TOP BAR -->
+  <header id="topbar">
+    <div class="logo">FITQUEST</div>
+    <div class="stats-row">
+      <div class="stat-chip"><span class="val mono" id="top-tokens">0</span><span class="lbl">tokens</span></div>
+      <div class="streak-badge">🔥 <span id="top-streak">0</span>d</div>
+      <div class="stat-chip"><span class="val mono" id="top-level">N1</span></div>
+    </div>
+    <!-- desktop history link -->
+    <div class="desktop-history" style="gap:8px; align-items:center;">
+      <button class="btn-log" onclick="openHistoryDesktop()" style="white-space:nowrap;">📋 History</button>
+      <button id="btn-settings" title="Coming soon: configure storage">⚙ Storage</button>
+    </div>
+    <button id="btn-settings-mobile" class="btn-secondary" style="display:none; padding:6px 10px; font-size:12px;" onclick="openSettings()" title="Coming soon">⚙</button>
+  </header>
+
+  <!-- MINI MODE -->
+  <div id="mini-mode">
+    <div class="mini-tokens">🪙 <span id="mini-tokens">0</span> tokens</div>
+    <div class="mini-timer" id="mini-timer">00:00:00</div>
+    <button class="btn btn-primary" onclick="completeCycleQuick()" style="font-size:12px; padding:8px 14px;">+ Cycle</button>
+  </div>
+
+  <!-- DESKTOP LAYOUT WRAPPER -->
+  <div id="desktop-layout">
+    <!-- TABS (mobile only) -->
+    <nav id="tabs">
+      <button class="tab-btn active" onclick="switchTab('exercise')">💪 Exercise</button>
+      <button class="tab-btn" onclick="switchTab('redeem')">🎁 Redeem</button>
+      <button class="tab-btn" onclick="switchTab('history')">📋 History</button>
+    </nav>
+
+    <!-- PANEL: EXERCISE -->
+    <div id="panel-exercise" class="panel active">
+
+      <!-- Level banner -->
+      <div class="level-banner animate-in">
+        <div class="level-icon" id="level-icon">🌱</div>
+        <div class="level-info">
+          <div class="level-name" id="level-name">Level 1 · Beginner</div>
+          <div class="level-sub" id="level-sub">Streak: 0 days · Next level: 7 days</div>
+        </div>
+        <div class="level-badge" id="level-badge">N1</div>
+      </div>
+
+      <!-- CYCLE: Plank + Pushups -->
+      <div class="cycle-card animate-in">
+        <div class="cycle-title">Main cycle · 1 🪙</div>
+
+        <!-- Plank -->
+        <div class="plank-section">
+          <div class="exercise-label">🧱 Plank — <span id="plank-target-label">30s</span></div>
+          <div class="plank-display">
+            <div class="plank-time mono" id="plank-display">00:00</div>
+            <div class="plank-progress"><div class="plank-progress-bar" id="plank-bar"></div></div>
+            <div class="plank-target" id="plank-target-text">Goal: 30s</div>
+          </div>
+          <div class="btn-row">
+            <button class="btn btn-primary" id="btn-plank-start" onclick="togglePlank()">▶ Start</button>
+            <button class="btn btn-secondary" onclick="resetPlank()">↺ Reset</button>
+          </div>
+        </div>
+
+        <div class="divider"></div>
+
+        <!-- Pushups -->
+        <div class="pushup-section">
+          <div class="exercise-label">💪 Push-ups — <span id="push-target-label">10 reps</span></div>
+          <div class="counter-display">
+            <button class="btn-counter minus" onclick="changePushup(-1)">−</button>
+            <div class="counter-num mono" id="pushup-count">0 <span>/ <span id="pushup-target">10</span></span></div>
+            <button class="btn-counter plus" onclick="changePushup(1)">+</button>
+          </div>
+        </div>
+
+        <!-- Complete -->
+        <button class="complete-cycle" id="btn-complete-cycle" onclick="completeCycle()" disabled>
+          <span class="token-reward">🪙</span> Complete cycle
+        </button>
+      </div>
+
+      <!-- OTHER ACTIVITIES -->
+      <div class="section-title">Other activities</div>
+      <div class="activities-list" id="activities-list"></div>
+      <button class="add-custom-btn" onclick="openAddCustom()">+ Add custom activity</button>
+
+      <!-- BONUS -->
+      <div class="section-title" style="margin-top:16px;">Daily bonus</div>
+      <div class="bonus-card">
+        <div class="act-icon">👣</div>
+        <div class="act-info">
+          <div class="act-name">Daily steps</div>
+          <div class="act-req">5,000 steps = +0.5 🪙</div>
+        </div>
+        <div class="steps-input-row">
+          <input type="number" class="steps-input mono" id="steps-input" placeholder="0" min="0">
+          <button class="btn-log" onclick="logSteps()">Log</button>
+        </div>
+      </div>
+      <div class="bonus-card">
+        <div class="act-icon">🧘</div>
+        <div class="act-info">
+          <div class="act-name">Yoga / Stretching</div>
+          <div class="act-req" id="yoga-req">10 min = +0.5 🪙</div>
+        </div>
+        <button class="btn-log" onclick="logYoga()">Log</button>
+      </div>
+    </div>
+
+    <!-- PANEL: REDEEM -->
+    <div id="panel-redeem" class="panel">
+
+      <!-- Main timer -->
+      <div class="timer-card animate-in">
+        <div class="timer-label">Active free time</div>
+        <div class="timer-display" id="main-timer-display">00:00:00</div>
+        <div class="timer-activity" id="timer-activity-label">No active activity</div>
+        <div class="timer-controls">
+          <button class="btn btn-secondary" id="btn-timer-pause" onclick="pauseRewardTimer()" style="display:none;">⏸ Pause</button>
+          <button class="btn btn-secondary" id="btn-timer-resume" onclick="resumeRewardTimer()" style="display:none;">▶ Resume</button>
+          <button class="btn btn-danger" id="btn-timer-stop" onclick="stopRewardTimer()" style="display:none;">⏹ End</button>
+        </div>
+      </div>
+
+      <!-- Token balance -->
+      <div class="tokens-balance animate-in">
+        <div>
+          <div class="tokens-lbl">Accumulated tokens</div>
+          <div class="tokens-val mono" id="redeem-tokens">0 🪙</div>
+        </div>
+        <div style="text-align:right; font-size:12px; color:var(--muted);">
+          <div id="level-rate">1 🪙 = 30 min</div>
+          <div style="margin-top:2px;" id="tokens-earned-today">today: +0</div>
+        </div>
+      </div>
+
+      <!-- Reward activities -->
+      <div class="section-title">Activities to unlock</div>
+      <div class="rewards-grid" id="rewards-grid"></div>
+    </div>
+
+    <!-- PANEL: HISTORY -->
+    <div id="panel-history" class="panel">
+      <div class="section-title">Last 28 days</div>
+      <div class="calendar-grid" id="calendar-grid"></div>
+      <div class="section-title">Recent log</div>
+      <div class="history-entries" id="history-entries">
+        <div class="empty-state">No records yet. Complete your first cycle!</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SETTINGS MODAL (disabled but built) -->
+<div class="modal-overlay" id="settings-modal">
+  <div class="modal">
+    <div class="modal-title">
+      ⚙ Settings
+      <button class="modal-close" onclick="closeSettings()">×</button>
+    </div>
+    <div style="font-size:13px; color:var(--muted); margin-bottom:16px; padding:10px; background:rgba(245,158,11,0.1); border:1px solid rgba(245,158,11,0.3); border-radius:var(--radius-sm);">
+      🚧 Coming soon: storage selection
+    </div>
+    <div class="form-group">
+      <label class="form-label">Storage mode</label>
+      <div class="storage-toggle">
+        <div class="storage-opt active">💾 Local (IndexedDB)</div>
+        <div class="storage-opt" style="opacity:0.4; cursor:not-allowed;">☁ Remote API</div>
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Export data</label>
+      <button class="btn btn-secondary" style="width:100%;" onclick="exportData()">⬇ Download JSON</button>
+    </div>
+    <div class="form-group">
+      <label class="form-label" style="color:var(--danger);">Danger zone</label>
+      <button class="btn btn-danger" style="width:100%; font-size:13px;" onclick="confirmReset()">🗑 Delete all data</button>
+    </div>
+  </div>
+</div>
+
+<!-- ADD CUSTOM ACTIVITY MODAL -->
+<div class="modal-overlay" id="custom-modal">
+  <div class="modal">
+    <div class="modal-title">
+      ➕ Custom activity
+      <button class="modal-close" onclick="closeCustomModal()">×</button>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Name</label>
+      <input class="form-input" id="custom-name" placeholder="E.g.: Jump rope">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Unit (e.g.: minutes, reps, km)</label>
+      <input class="form-input" id="custom-unit" placeholder="minutes">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Base amount (Level 1)</label>
+      <input class="form-input mono" id="custom-amount" type="number" placeholder="15">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Tokens awarded</label>
+      <input class="form-input mono" id="custom-tokens" type="number" step="0.5" placeholder="1">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Icon (emoji)</label>
+      <input class="form-input" id="custom-icon" placeholder="🏋️" maxlength="2">
+    </div>
+    <button class="btn btn-primary" style="width:100%; margin-top:4px;" onclick="saveCustomActivity()">Save activity</button>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div id="toast"></div>
+
+<script>
+// ══════════════════════════════════════════════
+// DB LAYER — IndexedDB abstraction
+// ══════════════════════════════════════════════
+const DB = (() => {
+  const NAME = 'fitquest_db', VER = 1;
+  let _db = null;
+
+  const open = () => new Promise((res, rej) => {
+    if (_db) return res(_db);
+    const req = indexedDB.open(NAME, VER);
+    req.onupgradeneeded = e => {
+      const db = e.target.result;
+      if (!db.objectStoreNames.contains('kv')) db.createObjectStore('kv');
+      if (!db.objectStoreNames.contains('exercise_logs')) {
+        const s = db.createObjectStore('exercise_logs', { keyPath: 'id' });
+        s.createIndex('date', 'date'); s.createIndex('profileId', 'profileId');
+      }
+      if (!db.objectStoreNames.contains('reward_sessions')) {
+        db.createObjectStore('reward_sessions', { keyPath: 'id' });
+      }
+      if (!db.objectStoreNames.contains('daily_summary')) {
+        db.createObjectStore('daily_summary', { keyPath: 'date' });
+      }
+    };
+    req.onsuccess = e => { _db = e.target.result; res(_db); };
+    req.onerror = () => rej(req.error);
+  });
+
+  const tx = async (store, mode, fn) => {
+    const db = await open();
+    return new Promise((res, rej) => {
+      const t = db.transaction(store, mode);
+      const s = Array.isArray(store) ? store.map(n => t.objectStore(n)) : t.objectStore(store);
+      const req = fn(s);
+      req.onsuccess = () => res(req.result);
+      req.onerror = () => rej(req.error);
+    });
+  };
+
+  return {
+    get: (key) => tx('kv', 'readonly', s => s.get(key)),
+    set: (key, val) => tx('kv', 'readwrite', s => s.put(val, key)),
+    del: (key) => tx('kv', 'readwrite', s => s.delete(key)),
+    addLog: (rec) => tx('exercise_logs', 'readwrite', s => s.add(rec)),
+    getAllLogs: () => new Promise(async (res) => {
+      const db = await open();
+      const t = db.transaction('exercise_logs', 'readonly');
+      const all = t.objectStore('exercise_logs').getAll();
+      all.onsuccess = () => res(all.result);
+    }),
+    addSession: (rec) => tx('reward_sessions', 'readwrite', s => s.add(rec)),
+    getAllSessions: () => new Promise(async (res) => {
+      const db = await open();
+      const t = db.transaction('reward_sessions', 'readonly');
+      const all = t.objectStore('reward_sessions').getAll();
+      all.onsuccess = () => res(all.result);
+    }),
+    clearAll: async () => {
+      const db = await open();
+      const stores = ['kv', 'exercise_logs', 'reward_sessions', 'daily_summary'];
+      return new Promise((res, rej) => {
+        const t = db.transaction(stores, 'readwrite');
+        stores.forEach(name => t.objectStore(name).clear());
+        t.oncomplete = res; t.onerror = rej;
+      });
+    }
+  };
+})();
+
+const uuid = () => crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).slice(2) + Date.now();
+const today = () => new Date().toISOString().slice(0, 10);
+const fmt2 = n => String(Math.floor(n)).padStart(2, '0');
+const fmtTime = s => {
+  const sec = Math.max(0, Math.round(s));
+  return `${fmt2(sec/3600)}:${fmt2((sec%3600)/60)}:${fmt2(sec%60)}`;
+};
+const fmtMMSS = s => `${fmt2(s/60)}:${fmt2(s%60)}`;
+
+// ══════════════════════════════════════════════
+// STATE
+// ══════════════════════════════════════════════
+let state = {
+  profile: {
+    id: 'local',
+    currentLevel: 1,
+    currentStreak: 0,
+    longestStreak: 0,
+    lastActivityDate: null
+  },
+  tokens: 0,
+  tokensEarnedToday: 0,
+  cyclesCompletedToday: 0,
+
+  // Plank
+  plankRunning: false,
+  plankElapsed: 0,      // seconds
+  plankStartTs: null,
+  plankDone: false,
+
+  // Pushups
+  pushupCount: 0,
+
+  // Reward timer
+  rewardTimer: {
+    state: 'idle',      // idle | running | paused | expired
+    activityName: '',
+    totalSeconds: 0,
+    remainingSeconds: 0,
+    startedAt: null,    // timestamp ms
+    pausedAt: null,     // timestamp ms
+    id: null
+  },
+
+  // Activities
+  customActivities: [],
+
+  config: {
+    storageMode: 'local'  // local | remote (remote disabled)
+  }
+};
+
+// ══════════════════════════════════════════════
+// LEVELS CONFIG
+// ══════════════════════════════════════════════
+const LEVELS = [
+  { level:1, icon:'🌱', name:'Beginner',  streak:0,  pushups:10, plankSec:30, cardioMult:1.0,   minPerToken:30 },
+  { level:2, icon:'⚡', name:'Active',  streak:7,  pushups:13, plankSec:40, cardioMult:1.1,   minPerToken:35 },
+  { level:3, icon:'🔥', name:'Strong',  streak:14, pushups:17, plankSec:52, cardioMult:1.25,  minPerToken:42 },
+  { level:4, icon:'💎', name:'Elite',   streak:30, pushups:22, plankSec:60, cardioMult:1.4,   minPerToken:50 }
+];
+
+const BASE_ACTIVITIES = [
+  { id:'run',  icon:'🏃', name:'Running',    type:'cardio', unit:'min', baseVal:15, tokens:1 },
+  { id:'walk', icon:'🚶', name:'Walking',  type:'cardio', unit:'min', baseVal:20, tokens:1 },
+  { id:'swim', icon:'🏊', name:'Swimming',  type:'cardio', unit:'min', baseVal:20, tokens:1 },
+  { id:'bike', icon:'🚴', name:'Cycling', type:'cardio', unit:'min', baseVal:20, tokens:1 },
+];
+
+const REWARD_ACTIVITIES = [
+  { id:'games',  icon:'🎮', name:'Video games',      cost:1 },
+  { id:'series', icon:'🎬', name:'Series / Movies',cost:1 },
+  { id:'social', icon:'📱', name:'Social media',    cost:1 },
+];
+
+// ══════════════════════════════════════════════
+// WEB WORKER SETUP (blob-based, no file needed)
+// ══════════════════════════════════════════════
+const WORKER_CODE = `
+let timers = {};
+self.onmessage = function(e) {
+  const { type, id, interval } = e.data;
+  if (type === 'start') {
+    if (timers[id]) clearInterval(timers[id]);
+    timers[id] = setInterval(() => self.postMessage({ id }), interval || 1000);
+  } else if (type === 'stop') {
+    clearInterval(timers[id]);
+    delete timers[id];
+  }
+};
+`;
+const workerBlob = new Blob([WORKER_CODE], { type: 'application/javascript' });
+const worker = new Worker(URL.createObjectURL(workerBlob));
+
+worker.onmessage = (e) => {
+  const { id } = e.data;
+  if (id === 'plank') tickPlank();
+  if (id === 'reward') tickReward();
+};
+
+// ══════════════════════════════════════════════
+// PERSIST / LOAD
+// ══════════════════════════════════════════════
+async function saveState() {
+  await DB.set('state', state);
+  // Request persistent storage
+  if (navigator.storage && navigator.storage.persist) {
+    navigator.storage.persist();
+  }
+}
+
+async function loadState() {
+  const saved = await DB.get('state');
+  if (saved) {
+    state = { ...state, ...saved };
+    // Restore reward timer if it was running when page closed
+    restoreRewardTimerFromState();
+    // Check streak
+    checkDailyStreak();
+  }
+}
+
+function restoreRewardTimerFromState() {
+  const rt = state.rewardTimer;
+  if (!rt || rt.state === 'idle' || rt.state === 'expired') return;
+
+  if (rt.state === 'running' && rt.startedAt) {
+    // Calculate elapsed since page was closed
+    const now = Date.now();
+    const elapsed = Math.floor((now - rt.startedAt) / 1000);
+    const remaining = rt.totalSeconds - elapsed;
+    if (remaining <= 0) {
+      state.rewardTimer.state = 'expired';
+      state.rewardTimer.remainingSeconds = 0;
+    } else {
+      state.rewardTimer.remainingSeconds = remaining;
+      // Restart worker tick
+      startRewardWorker();
+    }
+  }
+  // If paused, remainingSeconds is already correct from when it was paused
+}
+
+function checkDailyStreak() {
+  const lastDate = state.profile.lastActivityDate;
+  if (!lastDate) return;
+  const last = new Date(lastDate);
+  const now = new Date();
+  const diffDays = Math.floor((now - last) / 86400000);
+  if (diffDays === 0) {
+    // Same day, streak intact
+  } else if (diffDays === 1) {
+    // Yesterday — streak continues (will increment on next activity)
+  } else if (diffDays > 1) {
+    // Broke streak — drop 1 level but not to 0
+    if (state.profile.currentStreak > 0) {
+      state.profile.currentStreak = Math.max(0, state.profile.currentStreak - diffDays + 1);
+      recalcLevel();
+    }
+  }
+}
+
+// ══════════════════════════════════════════════
+// LEVEL LOGIC
+// ══════════════════════════════════════════════
+function getCurrentLevel() {
+  const streak = state.profile.currentStreak;
+  let lv = LEVELS[0];
+  for (const l of LEVELS) {
+    if (streak >= l.streak) lv = l;
+  }
+  return lv;
+}
+
+function recalcLevel() {
+  const lv = getCurrentLevel();
+  state.profile.currentLevel = lv.level;
+}
+
+function getLevelConfig() {
+  return LEVELS.find(l => l.level === state.profile.currentLevel) || LEVELS[0];
+}
+
+// ══════════════════════════════════════════════
+// PLANK TIMER
+// ══════════════════════════════════════════════
+function togglePlank() {
+  if (state.plankDone) return;
+  if (state.plankRunning) {
+    // Pause
+    state.plankRunning = false;
+    worker.postMessage({ type: 'stop', id: 'plank' });
+    document.getElementById('btn-plank-start').textContent = '▶ Continue';
+  } else {
+    state.plankRunning = true;
+    state.plankStartTs = Date.now() - (state.plankElapsed * 1000);
+    worker.postMessage({ type: 'start', id: 'plank', interval: 500 });
+    document.getElementById('btn-plank-start').textContent = '⏸ Pause';
+  }
+  saveState();
+}
+
+function tickPlank() {
+  if (!state.plankRunning) return;
+  state.plankElapsed = Math.floor((Date.now() - state.plankStartTs) / 1000);
+  const lv = getLevelConfig();
+  const target = lv.plankSec;
+  if (state.plankElapsed >= target) {
+    state.plankElapsed = target;
+    state.plankRunning = false;
+    state.plankDone = true;
+    worker.postMessage({ type: 'stop', id: 'plank' });
+    document.getElementById('btn-plank-start').textContent = '✓ Completed';
+    document.getElementById('btn-plank-start').disabled = true;
+    showToast('🧱 Plank completed!');
+  }
+  renderPlank();
+  checkCycleReady();
+}
+
+function renderPlank() {
+  const lv = getLevelConfig();
+  const target = lv.plankSec;
+  const el = document.getElementById('plank-display');
+  const bar = document.getElementById('plank-bar');
+  if (el) el.textContent = fmtMMSS(state.plankElapsed);
+  if (bar) bar.style.width = Math.min(100, (state.plankElapsed / target) * 100) + '%';
+}
+
+function resetPlank() {
+  if (state.plankDone && !confirm('Reset plank? You already completed it.')) return;
+  state.plankRunning = false;
+  state.plankElapsed = 0;
+  state.plankDone = false;
+  state.plankStartTs = null;
+  worker.postMessage({ type: 'stop', id: 'plank' });
+  const btn = document.getElementById('btn-plank-start');
+  if (btn) { btn.textContent = '▶ Start'; btn.disabled = false; }
+  renderPlank();
+  checkCycleReady();
+  saveState();
+}
+
+// ══════════════════════════════════════════════
+// PUSHUPS
+// ══════════════════════════════════════════════
+function changePushup(delta) {
+  const lv = getLevelConfig();
+  state.pushupCount = Math.max(0, Math.min(state.pushupCount + delta, lv.pushups * 3));
+  document.getElementById('pushup-count').innerHTML = `${state.pushupCount} <span>/ <span id="pushup-target">${lv.pushups}</span></span>`;
+  checkCycleReady();
+}
+
+function checkCycleReady() {
+  const lv = getLevelConfig();
+  const ready = state.plankDone && state.pushupCount >= lv.pushups;
+  const btn = document.getElementById('btn-complete-cycle');
+  if (btn) {
+    btn.disabled = !ready;
+    btn.innerHTML = ready
+      ? `<span class="token-reward">🪙</span> Complete cycle (+${lv.minPerToken} min)`
+      : `<span class="token-reward">🪙</span> Complete cycle`;
+  }
+}
+
+async function completeCycle() {
+  const lv = getLevelConfig();
+  if (!state.plankDone || state.pushupCount < lv.pushups) {
+    showToast('❌ Complete plank + push-ups first'); return;
+  }
+  state.tokens += 1;
+  state.tokensEarnedToday += 1;
+  state.cyclesCompletedToday += 1;
+  updateStreak();
+
+  const logEntry = {
+    id: uuid(), profileId: 'local', date: today(),
+    activityId: 'cycle_main', activityName: 'Main cycle (plank + push-ups)',
+    value: 1, level: state.profile.currentLevel,
+    tokensEarned: 1, completedAt: new Date().toISOString(),
+    details: { pushups: state.pushupCount, plankSec: lv.plankSec }
+  };
+  await DB.addLog(logEntry);
+
+  // Reset cycle
+  state.plankDone = false; state.plankElapsed = 0; state.plankRunning = false;
+  state.pushupCount = 0;
+  const btn = document.getElementById('btn-plank-start');
+  if (btn) { btn.textContent = '▶ Start'; btn.disabled = false; }
+  renderPlank();
+  renderCounters();
+  checkCycleReady();
+  await saveState();
+  showToast(`🪙 +1 token! Total: ${state.tokens.toFixed(1)}`);
+  renderAll();
+}
+
+function completeCycleQuick() {
+  state.tokens += 1;
+  state.tokensEarnedToday += 1;
+  saveState();
+  document.getElementById('mini-tokens').textContent = state.tokens.toFixed(1);
+  showToast('🪙 +1 token!');
+}
+
+// ══════════════════════════════════════════════
+// STREAK
+// ══════════════════════════════════════════════
+function updateStreak() {
+  const t = today();
+  if (state.profile.lastActivityDate !== t) {
+    const last = state.profile.lastActivityDate;
+    if (last) {
+      const diff = Math.floor((new Date(t) - new Date(last)) / 86400000);
+      if (diff === 1) {
+        state.profile.currentStreak += 1;
+      } else if (diff > 1) {
+        state.profile.currentStreak = Math.max(1, state.profile.currentStreak - diff + 2);
+      }
+    } else {
+      state.profile.currentStreak = 1;
+    }
+    state.profile.lastActivityDate = t;
+    if (state.profile.currentStreak > state.profile.longestStreak)
+      state.profile.longestStreak = state.profile.currentStreak;
+  }
+  recalcLevel();
+}
+
+// ══════════════════════════════════════════════
+// OTHER ACTIVITIES
+// ══════════════════════════════════════════════
+async function logActivity(actId) {
+  const lv = getLevelConfig();
+  const allActs = [...BASE_ACTIVITIES, ...state.customActivities];
+  const act = allActs.find(a => a.id === actId);
+  if (!act) return;
+
+  const mult = act.type === 'cardio' ? lv.cardioMult : 1;
+  const req = Math.ceil(act.baseVal * mult);
+  const ok = confirm(`Did you complete ${req} ${act.unit} of ${act.name}?`);
+  if (!ok) return;
+
+  state.tokens += act.tokens;
+  state.tokensEarnedToday += act.tokens;
+  updateStreak();
+
+  const logEntry = {
+    id: uuid(), profileId: 'local', date: today(),
+    activityId: actId, activityName: act.name,
+    value: req, level: state.profile.currentLevel,
+    tokensEarned: act.tokens, completedAt: new Date().toISOString()
+  };
+  await DB.addLog(logEntry);
+  await saveState();
+  showToast(`🪙 +${act.tokens} token! Total: ${state.tokens.toFixed(1)}`);
+  renderAll();
+}
+
+async function logSteps() {
+  const inp = document.getElementById('steps-input');
+  const steps = parseInt(inp.value) || 0;
+  if (steps < 5000) { showToast('👣 Minimum 5,000 steps to earn a token'); return; }
+  const earned = Math.floor(steps / 5000) * 0.5;
+  state.tokens += earned;
+  state.tokensEarnedToday += earned;
+  updateStreak();
+
+  const logEntry = {
+    id: uuid(), profileId: 'local', date: today(),
+    activityId: 'steps', activityName: 'Daily steps',
+    value: steps, level: state.profile.currentLevel,
+    tokensEarned: earned, completedAt: new Date().toISOString()
+  };
+  await DB.addLog(logEntry);
+  inp.value = '';
+  await saveState();
+  showToast(`🪙 +${earned} token for ${steps.toLocaleString()} steps!`);
+  renderAll();
+}
+
+async function logYoga() {
+  const ok = confirm('Did you complete at least 10 minutes of yoga/stretching?');
+  if (!ok) return;
+  state.tokens += 0.5;
+  state.tokensEarnedToday += 0.5;
+  updateStreak();
+
+  const logEntry = {
+    id: uuid(), profileId: 'local', date: today(),
+    activityId: 'yoga', activityName: 'Yoga / Stretching',
+    value: 10, level: state.profile.currentLevel,
+    tokensEarned: 0.5, completedAt: new Date().toISOString()
+  };
+  await DB.addLog(logEntry);
+  await saveState();
+  showToast('🪙 +0.5 token for yoga!');
+  renderAll();
+}
+
+// ══════════════════════════════════════════════
+// REWARD TIMER
+// ══════════════════════════════════════════════
+function startRewardWorker() {
+  worker.postMessage({ type: 'start', id: 'reward', interval: 1000 });
+}
+
+async function startRewardTimer(actId) {
+  if (state.rewardTimer.state === 'running') {
+    showToast('⚠ There is already an active timer'); return;
+  }
+  if (state.tokens < 1) { showToast('❌ Not enough tokens'); return; }
+
+  const lv = getLevelConfig();
+  const act = REWARD_ACTIVITIES.find(a => a.id === actId);
+  if (!act) return;
+
+  const totalSec = lv.minPerToken * 60 * act.cost;
+  state.tokens -= act.cost;
+  state.rewardTimer = {
+    state: 'running',
+    activityName: act.name,
+    totalSeconds: totalSec,
+    remainingSeconds: totalSec,
+    startedAt: Date.now(),
+    pausedAt: null,
+    id: uuid()
+  };
+
+  const sessionEntry = {
+    id: state.rewardTimer.id, profileId: 'local',
+    activityName: act.name, tokensCost: act.cost,
+    minutesGranted: lv.minPerToken * act.cost,
+    startedAt: new Date().toISOString(),
+    endsAt: new Date(Date.now() + totalSec * 1000).toISOString(),
+    paused: false
+  };
+  await DB.addSession(sessionEntry);
+  startRewardWorker();
+  await saveState();
+  renderRewardTimer();
+  renderAll();
+  showToast(`▶ ${act.name} · ${lv.minPerToken} min`);
+}
+
+function tickReward() {
+  const rt = state.rewardTimer;
+  if (rt.state !== 'running') return;
+
+  const elapsed = Math.floor((Date.now() - rt.startedAt) / 1000);
+  rt.remainingSeconds = Math.max(0, rt.totalSeconds - elapsed);
+
+  if (rt.remainingSeconds <= 0) {
+    rt.state = 'expired';
+    rt.remainingSeconds = 0;
+    worker.postMessage({ type: 'stop', id: 'reward' });
+    saveState();
+    showToast('⏰ Free time is over!');
+  }
+  renderRewardTimer();
+  // Update mini mode
+  const mini = document.getElementById('mini-timer');
+  if (mini) mini.textContent = fmtTime(rt.remainingSeconds);
+}
+
+async function pauseRewardTimer() {
+  const rt = state.rewardTimer;
+  if (rt.state !== 'running') return;
+  rt.state = 'paused';
+  rt.pausedAt = Date.now();
+  worker.postMessage({ type: 'stop', id: 'reward' });
+  await saveState();
+  renderRewardTimer();
+}
+
+async function resumeRewardTimer() {
+  const rt = state.rewardTimer;
+  if (rt.state !== 'paused') return;
+  const pausedDuration = Date.now() - rt.pausedAt;
+  rt.startedAt += pausedDuration; // Shift start time forward by paused duration
+  rt.state = 'running';
+  rt.pausedAt = null;
+  startRewardWorker();
+  await saveState();
+  renderRewardTimer();
+}
+
+async function stopRewardTimer() {
+  if (!confirm('End free time? Remaining time will be lost.')) return;
+  worker.postMessage({ type: 'stop', id: 'reward' });
+  state.rewardTimer = { state: 'idle', activityName: '', totalSeconds: 0, remainingSeconds: 0, startedAt: null, pausedAt: null, id: null };
+  await saveState();
+  renderRewardTimer();
+}
+
+function renderRewardTimer() {
+  const rt = state.rewardTimer;
+  const disp = document.getElementById('main-timer-display');
+  const lbl = document.getElementById('timer-activity-label');
+  const btnPause = document.getElementById('btn-timer-pause');
+  const btnResume = document.getElementById('btn-timer-resume');
+  const btnStop = document.getElementById('btn-timer-stop');
+
+  if (!disp) return;
+
+  disp.className = 'timer-display';
+  if (rt.state === 'idle') {
+    disp.textContent = '00:00:00';
+    if (lbl) lbl.textContent = 'No active activity';
+    if (btnPause) btnPause.style.display = 'none';
+    if (btnResume) btnResume.style.display = 'none';
+    if (btnStop) btnStop.style.display = 'none';
+  } else if (rt.state === 'running') {
+    disp.textContent = fmtTime(rt.remainingSeconds);
+    disp.classList.add('running');
+    if (lbl) lbl.textContent = '▶ ' + rt.activityName;
+    if (btnPause) btnPause.style.display = '';
+    if (btnResume) btnResume.style.display = 'none';
+    if (btnStop) btnStop.style.display = '';
+  } else if (rt.state === 'paused') {
+    disp.textContent = fmtTime(rt.remainingSeconds);
+    disp.classList.add('paused');
+    if (lbl) lbl.textContent = '⏸ ' + rt.activityName;
+    if (btnPause) btnPause.style.display = 'none';
+    if (btnResume) btnResume.style.display = '';
+    if (btnStop) btnStop.style.display = '';
+  } else if (rt.state === 'expired') {
+    disp.textContent = '00:00:00';
+    disp.classList.add('expired');
+    if (lbl) lbl.textContent = '⏰ Time expired · ' + rt.activityName;
+    if (btnPause) btnPause.style.display = 'none';
+    if (btnResume) btnResume.style.display = 'none';
+    if (btnStop) btnStop.style.display = '';
+  }
+}
+
+// ══════════════════════════════════════════════
+// RENDER
+// ══════════════════════════════════════════════
+function renderAll() {
+  const lv = getLevelConfig();
+  const lvData = getCurrentLevel();
+
+  // Topbar
+  document.getElementById('top-tokens').textContent = state.tokens.toFixed(1);
+  document.getElementById('top-streak').textContent = state.profile.currentStreak;
+  document.getElementById('top-level').textContent = 'N' + lv.level;
+  document.getElementById('mini-tokens').textContent = state.tokens.toFixed(1);
+
+  // Level banner
+  document.getElementById('level-icon').textContent = lvData.icon;
+  document.getElementById('level-name').textContent = `Level ${lv.level} · ${lvData.name}`;
+  const nextLv = LEVELS.find(l => l.level === lv.level + 1);
+  const nextText = nextLv ? `Next level: ${nextLv.streak - state.profile.currentStreak} more days` : 'Max level!';
+  document.getElementById('level-sub').textContent = `Streak: ${state.profile.currentStreak} days · ${nextText}`;
+  document.getElementById('level-badge').textContent = 'N' + lv.level;
+
+  // Plank labels
+  document.getElementById('plank-target-label').textContent = lv.plankSec + 's';
+  document.getElementById('plank-target-text').textContent = 'Goal: ' + lv.plankSec + 's';
+  document.getElementById('push-target-label').textContent = lv.pushups + ' reps';
+  document.getElementById('pushup-count').innerHTML =
+    `${state.pushupCount} <span>/ <span id="pushup-target">${lv.pushups}</span></span>`;
+
+  renderPlank();
+
+  // Activities list
+  renderActivitiesList();
+
+  // Redeem
+  document.getElementById('redeem-tokens').textContent = state.tokens.toFixed(1) + ' 🪙';
+  document.getElementById('level-rate').textContent = `1 🪙 = ${lv.minPerToken} min`;
+  document.getElementById('tokens-earned-today').textContent = `today: +${state.tokensEarnedToday.toFixed(1)}`;
+
+  renderRewardsGrid();
+  renderRewardTimer();
+}
+
+function renderCounters() {
+  const lv = getLevelConfig();
+  document.getElementById('pushup-count').innerHTML =
+    `${state.pushupCount} <span>/ <span id="pushup-target">${lv.pushups}</span></span>`;
+}
+
+function renderActivitiesList() {
+  const lv = getLevelConfig();
+  const container = document.getElementById('activities-list');
+  if (!container) return;
+  const allActs = [...BASE_ACTIVITIES, ...state.customActivities];
+  container.innerHTML = allActs.map(act => {
+    const mult = act.type === 'cardio' ? lv.cardioMult : 1;
+    const req = Math.ceil(act.baseVal * mult);
+    return `
+      <div class="activity-card animate-in">
+        <div class="act-icon">${act.icon}</div>
+        <div class="act-info">
+          <div class="act-name">${act.name}</div>
+          <div class="act-req">${req} ${act.unit} → ${act.tokens} 🪙</div>
+        </div>
+        <button class="btn-log" onclick="logActivity('${act.id}')">Log</button>
+      </div>`;
+  }).join('');
+}
+
+function renderRewardsGrid() {
+  const grid = document.getElementById('rewards-grid');
+  if (!grid) return;
+  const hasTokens = state.tokens >= 1;
+  const timerActive = state.rewardTimer.state === 'running' || state.rewardTimer.state === 'paused';
+  grid.innerHTML = REWARD_ACTIVITIES.map(act => {
+    const disabled = !hasTokens || timerActive;
+    return `
+      <div class="reward-card ${disabled ? 'disabled' : ''}"
+           onclick="${disabled ? '' : `startRewardTimer('${act.id}')`}">
+        <div class="reward-icon">${act.icon}</div>
+        <div class="reward-info">
+          <div class="reward-name">${act.name}</div>
+          <div class="reward-time">${state.profile.currentLevel > 0 ? getLevelConfig().minPerToken : 30} min</div>
+        </div>
+        <div class="reward-cost">${act.cost} 🪙</div>
+      </div>`;
+  }).join('');
+}
+
+// ══════════════════════════════════════════════
+// HISTORY RENDER
+// ══════════════════════════════════════════════
+async function renderHistory() {
+  const logs = await DB.getAllLogs();
+  const sorted = logs.sort((a, b) => new Date(b.completedAt) - new Date(a.completedAt));
+
+  // Calendar — last 28 days
+  const calGrid = document.getElementById('calendar-grid');
+  if (calGrid) {
+    const days = [];
+    for (let i = 27; i >= 0; i--) {
+      const d = new Date(); d.setDate(d.getDate() - i);
+      days.push(d.toISOString().slice(0, 10));
+    }
+    const byDay = {};
+    logs.forEach(l => { byDay[l.date] = (byDay[l.date] || 0) + 1; });
+    const todayStr = today();
+    calGrid.innerHTML = days.map(d => {
+      const cnt = byDay[d] || 0;
+      const dayNum = new Date(d + 'T12:00:00').getDate();
+      return `<div class="cal-day ${cnt > 0 ? 'has-data' : ''} ${d === todayStr ? 'today' : ''}">
+        <span class="cal-num">${dayNum}</span>
+        ${cnt > 0 ? `<span class="cal-cycles">${cnt}</span>` : ''}
+      </div>`;
+    }).join('');
+  }
+
+  // Entries
+  const entries = document.getElementById('history-entries');
+  if (!entries) return;
+  if (sorted.length === 0) {
+    entries.innerHTML = '<div class="empty-state">No records yet. Complete your first cycle!</div>';
+    return;
+  }
+  entries.innerHTML = sorted.slice(0, 50).map(l => `
+    <div class="history-entry animate-in">
+      <div class="entry-icon">${getActivityIcon(l.activityId)}</div>
+      <div class="entry-info">
+        <div class="entry-name">${l.activityName}</div>
+        <div class="entry-meta">${l.date} · Level ${l.level}</div>
+      </div>
+      <div class="entry-tokens">+${l.tokensEarned} 🪙</div>
+    </div>`).join('');
+}
+
+function getActivityIcon(id) {
+  const map = { cycle_main:'💪', run:'🏃', walk:'🚶', swim:'🏊', bike:'🚴', steps:'👣', yoga:'🧘' };
+  return map[id] || '⚡';
+}
+
+// ══════════════════════════════════════════════
+// TABS
+// ══════════════════════════════════════════════
+function switchTab(name) {
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.querySelector(`.tab-btn[onclick="switchTab('${name}')"]`).classList.add('active');
+  document.getElementById('panel-' + name).classList.add('active');
+  if (name === 'history') renderHistory();
+}
+
+function openHistoryDesktop() {
+  // On desktop, show history in a simple overlay or side view
+  // For simplicity, scroll to it or show modal
+  renderHistory();
+  // Quick: toggle history panel visibility on desktop
+  const h = document.getElementById('panel-history');
+  if (h.style.display === 'block') {
+    h.style.display = 'none';
+  } else {
+    h.style.display = 'block';
+    h.style.position = 'fixed';
+    h.style.right = '0'; h.style.top = '57px';
+    h.style.width = '380px'; h.style.height = 'calc(100dvh - 57px)';
+    h.style.background = 'var(--surface)';
+    h.style.borderLeft = '1px solid var(--border)';
+    h.style.zIndex = '60'; h.style.overflowY = 'auto';
+    h.style.padding = '20px';
+  }
+}
+
+// ══════════════════════════════════════════════
+// CUSTOM ACTIVITIES
+// ══════════════════════════════════════════════
+function openAddCustom() {
+  document.getElementById('custom-modal').classList.add('open');
+}
+function closeCustomModal() {
+  document.getElementById('custom-modal').classList.remove('open');
+}
+async function saveCustomActivity() {
+  const name = document.getElementById('custom-name').value.trim();
+  const unit = document.getElementById('custom-unit').value.trim() || 'min';
+  const amount = parseFloat(document.getElementById('custom-amount').value) || 15;
+  const tokens = parseFloat(document.getElementById('custom-tokens').value) || 1;
+  const icon = document.getElementById('custom-icon').value || '⚡';
+  if (!name) { showToast('❌ Enter a name'); return; }
+  const act = { id: 'custom_' + uuid().slice(0, 8), icon, name, type: 'custom', unit, baseVal: amount, tokens };
+  state.customActivities.push(act);
+  await saveState();
+  closeCustomModal();
+  renderActivitiesList();
+  showToast('✓ Activity added');
+}
+
+// ══════════════════════════════════════════════
+// SETTINGS
+// ══════════════════════════════════════════════
+function openSettings() {
+  document.getElementById('settings-modal').classList.add('open');
+}
+function closeSettings() {
+  document.getElementById('settings-modal').classList.remove('open');
+}
+function exportData() {
+  const data = JSON.stringify(state, null, 2);
+  const blob = new Blob([data], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href = url;
+  a.download = `fitquest-backup-${today()}.json`; a.click();
+}
+async function confirmReset() {
+  if (!confirm('Delete ALL data? This action cannot be undone.')) return;
+  await DB.clearAll();
+  location.reload();
+}
+
+// ══════════════════════════════════════════════
+// TOAST
+// ══════════════════════════════════════════════
+let toastTimer;
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 2800);
+}
+
+// ══════════════════════════════════════════════
+// INIT
+// ══════════════════════════════════════════════
+async function init() {
+  await loadState();
+  recalcLevel();
+  renderAll();
+  checkCycleReady();
+
+  // Reset daily counters if new day
+  const lastDate = state.profile.lastActivityDate;
+  if (lastDate && lastDate !== today()) {
+    state.tokensEarnedToday = 0;
+    state.cyclesCompletedToday = 0;
+  }
+
+  // Restore plank if it was running
+  if (state.plankRunning && state.plankStartTs) {
+    const elapsed = Math.floor((Date.now() - state.plankStartTs) / 1000);
+    state.plankElapsed = elapsed;
+    const lv = getLevelConfig();
+    if (elapsed >= lv.plankSec) {
+      state.plankDone = true; state.plankRunning = false;
+      const btn = document.getElementById('btn-plank-start');
+      if (btn) { btn.textContent = '✓ Completed'; btn.disabled = true; }
+    } else {
+      worker.postMessage({ type: 'start', id: 'plank', interval: 500 });
+      document.getElementById('btn-plank-start').textContent = '⏸ Pause';
+    }
+    renderPlank();
+  }
+
+  renderRewardTimer();
+}
+
+init();
+</script>
+</body>
+</html>
